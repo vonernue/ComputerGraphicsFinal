@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, controls, cameraTPP, controlsTPP, scene, renderer;
-let player, helmet, monitor, bottle, video; 
+let player, helmet, monitor, bottle, video, meshShape; 
 let geometry, material
 
 const loader = new GLTFLoader();
@@ -244,7 +244,19 @@ function main() {
         }
     );
 
+    // Weird Shape :>
+    geometry = new THREE.IcosahedronGeometry(1, 0);
+    material = new THREE.MeshPhysicalMaterial({  
+        roughness: 0.25,  
+        transmission: 1, // Add transparency
+        thickness: 0.5, // Add Refraction
+      });
 
+    meshShape = new THREE.Mesh(geometry, material)
+    meshShape.castShadow = true;
+    meshShape.scale.set(2, 2, 2);
+    meshShape.position.set(0, 0, -10)
+    scene.add(meshShape);
 
     geometry = new THREE.PlaneGeometry( 2000, 2000 );
     geometry.rotateX( - Math.PI / 2 );
@@ -322,8 +334,8 @@ function animate() {
         player.position.y -= 15;
     }
 
-    // console.log(camera)
-
+    meshShape.rotation.x += 0.01;
+    meshShape.rotation.y += 0.01;
 
     controlsTPP.update()
     controls.update();
