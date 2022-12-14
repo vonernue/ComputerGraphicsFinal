@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, controls, cameraTPP, controlsTPP, scene, renderer;
-let player, helmet, monitor, video; 
+let player, helmet, monitor, bottle, video; 
 let geometry, material
 
 const loader = new GLTFLoader();
@@ -106,7 +106,7 @@ function main() {
     });
     const cube = new THREE.Mesh( geometry, material );
     cube.castShadow = true;
-    scene.add( cube );
+    // scene.add( cube );
 
 
     // Load Player
@@ -173,6 +173,38 @@ function main() {
         // called when loading has errors
         function ( error ) {
             console.log( 'Error loading Helmet' );
+        }
+    );
+
+    // Load Water Bottle
+    loader.setPath('bottle/')
+    loader.load( 'WaterBottle.gltf',
+        function ( gltf ) { 
+            bottle = gltf.scene;
+            bottle.traverse( function ( n ) {
+                if ( n.isMesh ) {
+                    n.castShadow = true;
+                    n.receiveShadow = true;
+                }  
+            })
+            
+            bottle.scale.set(7, 7, 7);
+            bottle.position.set(-2, -5, -6)
+            scene.add( bottle );
+
+            gltf.animations; // Array<THREE.AnimationClip>
+            gltf.scene; // THREE.Group
+            gltf.scenes; // Array<THREE.Group>
+            gltf.cameras; // Array<THREE.Camera>
+            gltf.asset; // Object
+        },
+        // called while loading is progressing
+        function ( xhr ) {
+            console.log( 'Bottle: ' + ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+        },
+        // called when loading has errors
+        function ( error ) {
+            console.log( 'Error loading Bottle' );
         }
     );
 
@@ -247,6 +279,7 @@ function onResize( ev ) {
     cameraTPP.aspect = width / height;
     cameraTPP.updateProjectionMatrix();
     renderer.setSize( width, height );
+    
 }
 
 function onKeyDown( ev ) {
@@ -258,6 +291,8 @@ function onKeyDown( ev ) {
             cameraTPP.position.z = camera.position.z + 20;
             cameraTPP.target = camera.position;
             cameraTPP.lookAt(camera.position)
+            player.setRotationFromMatrix(camera.matrix);
+            player.rotateY(Math.PI)
         }
     } else if (ev.key == "Enter"){
         isPlaying = !isPlaying
@@ -267,6 +302,7 @@ function onKeyDown( ev ) {
             video.pause()
         }
     }
+    console.log(camera.rotation.x, camera.rotation.y, camera.rotation.z)
 }
 
 function animate() {
@@ -282,6 +318,7 @@ function animate() {
 
     if (player != undefined) {
         player.position.copy(camera.position);
+        // player.rotateY(camera.rotation.y);
         player.position.y -= 15;
     }
 
