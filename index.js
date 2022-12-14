@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as TWEEN from './js/tween.esm.js';
+import * as GUI from 'dat.gui';
 
 let camera, controls, cameraTPP, controlsTPP, scene, renderer;
 let player, helmet, monitor, bottle, video, meshShape; 
@@ -18,6 +19,7 @@ const windowHalf = new THREE.Vector2( window.innerWidth / 2, window.innerHeight 
 var zoomSpeed = 3;
 var isTPP = false
 var isPlaying = false;
+var meshRoughness = 0.25
 
 
 main();
@@ -253,10 +255,10 @@ function main() {
     // Weird Shape :>
     geometry = new THREE.IcosahedronGeometry(1, 0);
     material = new THREE.MeshPhysicalMaterial({  
-        roughness: 0.25,  
+        roughness: meshRoughness,  
         transmission: 1, // Add transparency
         thickness: 0.5, // Add Refraction
-      });
+    });
     const bumpTexture = new THREE.TextureLoader().load('img/concreteNormal.jpg')
     material.bumpMap = bumpTexture
     material.bumpScale = 0.015
@@ -305,8 +307,8 @@ function onResize( ev ) {
 
 function onKeyDown( ev ) {
     if (ev.key == 't') {
+        if (inAnimation) return;
         isTPP = !isTPP
-        
         if (isTPP) {
             playerPos = camera.position.clone()
             // scene.add(player)
