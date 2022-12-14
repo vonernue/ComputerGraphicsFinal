@@ -251,6 +251,9 @@ function main() {
         transmission: 1, // Add transparency
         thickness: 0.5, // Add Refraction
       });
+    const bumpTexture = new THREE.TextureLoader().load('img/concreteNormal.jpg')
+    material.bumpMap = bumpTexture
+    material.bumpScale = 0.015
 
     meshShape = new THREE.Mesh(geometry, material)
     meshShape.castShadow = true;
