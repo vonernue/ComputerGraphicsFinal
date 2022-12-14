@@ -1,10 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as TWEEN from './js/tween.esm.js';
 
 let camera, controls, cameraTPP, controlsTPP, scene, renderer;
 let player, helmet, monitor, bottle, video, meshShape; 
 let geometry, material
+let currentCamera;
+let playerPos = new THREE.Vector3(0, 0, 0);
+let inAnimation = false;
 
 const loader = new GLTFLoader();
 const mouse = new THREE.Vector2();
@@ -15,6 +19,7 @@ var zoomSpeed = 3;
 var isTPP = false
 var isPlaying = false;
 
+
 main();
 animate();
 
@@ -22,7 +27,8 @@ function main() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     cameraTPP = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     camera.position.z = 10;
-    
+    currentCamera = camera;
+
     scene = new THREE.Scene();
 
     var env = new THREE.CubeTextureLoader()
@@ -71,7 +77,7 @@ function main() {
     controls.zoomSpeed = zoomSpeed;
 
     const updateCameraOrbit = () => {
-        var currentCamera = isTPP ? cameraTPP : camera;
+        var currentCamera = camera;
         const forward = new THREE.Vector3();
         currentCamera.getWorldDirection(forward);
     
@@ -124,7 +130,7 @@ function main() {
             player.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
             player.position.copy(camera.position);
             player.position.y -= 10;
-            scene.add( player );
+            // scene.add( player );
 
 
             gltf.animations; // Array<THREE.AnimationClip>
@@ -300,14 +306,64 @@ function onResize( ev ) {
 function onKeyDown( ev ) {
     if (ev.key == 't') {
         isTPP = !isTPP
+        
         if (isTPP) {
+            playerPos = camera.position.clone()
+            // scene.add(player)
             cameraTPP.position.x = camera.position.x;
             cameraTPP.position.y = 10;
             cameraTPP.position.z = camera.position.z + 20;
-            cameraTPP.target = camera.position;
-            cameraTPP.lookAt(camera.position)
+            cameraTPP.target = playerPos;
+            cameraTPP.lookAt(playerPos)
             player.setRotationFromMatrix(camera.matrix);
             player.rotateY(Math.PI)
+            
+            controlsTPP.target = playerPos
+            controlsTPP.autoRotate = false;
+            controls.enabled = false
+            // currentCamera = cameraTPP
+
+            var FPPtoTPP = new TWEEN.Tween(camera.position)
+                .to({x: camera.position.x, y: 10, z: camera.position.z+20}, 1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onStart(function(){
+                    controlsTPP.autoRotate = false;
+                    controls.enabled = false
+                    inAnimation = true
+                })
+                .onUpdate(function(){
+                })
+                .onComplete(function(){
+                    scene.add(player)
+                    controlsTPP.autoRotate = true;
+                    currentCamera = cameraTPP
+                    inAnimation = false
+                })
+                .start();
+        }else{
+            // scene.remove(player)
+            // controls.enabled = true
+            // currentCamera = camera
+            console.log(playerPos.x, playerPos.y, playerPos.z)
+            camera.position.copy(cameraTPP.position)
+            var TPPtoFPP = new TWEEN.Tween(camera.position)
+                .to({x: playerPos.x, y: playerPos.y, z: playerPos.z}, 1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onStart(function(){
+                    scene.remove(player)
+                    inAnimation = true
+                    controlsTPP.autoRotate = false;
+                    controls.enabled = true
+                    currentCamera = camera
+                })
+                .onUpdate(function(){
+                    
+                })
+                .onComplete(function(){
+                    controls.enabled = true
+                    inAnimation = false
+                })
+                .start();
         }
     } else if (ev.key == "Enter"){
         isPlaying = !isPlaying
@@ -317,37 +373,32 @@ function onKeyDown( ev ) {
             video.pause()
         }
     }
-    console.log(camera.rotation.x, camera.rotation.y, camera.rotation.z)
 }
 
 function animate() {
     requestAnimationFrame( animate );
 
-    if (isTPP){
-        scene.add(player)
-        controls.enabled = false
-    }else{
-        scene.remove(player)
-        controls.enabled = true
-    }
-
-    if (player != undefined) {
-        player.position.copy(camera.position);
+    if (player != undefined && !inAnimation) {
+        if (isTPP) {
+            player.position.copy(playerPos);
+        }else{
+            player.position.copy(camera.position);
+        }
+        
         // player.rotateY(camera.rotation.y);
         player.position.y -= 15;
     }
+
+    // console.log(playerPos)
 
     meshShape.rotation.x += 0.01;
     meshShape.rotation.y += 0.01;
 
     controlsTPP.update()
     controls.update();
+    TWEEN.update()
 
-    if (isTPP) {
-        renderer.render( scene, cameraTPP );
-    } else {
-        renderer.render( scene, camera );
-    }
+    renderer.render( scene, currentCamera );
 }
 
 // animate();
