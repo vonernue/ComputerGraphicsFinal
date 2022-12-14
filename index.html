@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Computer Graphics Final Project</title>
+    <link type="text/css" rel="stylesheet" href="index.css">
+		<style>
+			body { margin: 0; }
+		</style>
+	</head>
+	<body>
+    <div id="info">Computer Science Final Project</div>
+    <video id="vid" width="640" height="480" loop hidden>
+      <source src="nyanCat.mp4" type="video/mp4">
+    </video>
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/"
+        }
+      }
+    </script>        
+    
+    <script type="module" src="index.js"></script>
+
+    <div id="help">
+      This is a 3D scene created using three.js
+      <br>
+      T: toggle TPP | Enter: toggle video playback
+      <br>
+      Mouse Left: rotate camera | Wheel: zoom in/out
+      <br>
+    </div>
+	</body>
+</html>

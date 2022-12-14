@@ -1,0 +1,11 @@
+Model Information:
+* title:	Rick Astley
+* source:	https://sketchfab.com/3d-models/rick-astley-d0784ac4263d40efb74510bc948cc844
+* author:	Explorian (https://sketchfab.com/Explorian)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Rick Astley" (https://sketchfab.com/3d-models/rick-astley-d0784ac4263d40efb74510bc948cc844) by Explorian (https://sketchfab.com/Explorian) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
