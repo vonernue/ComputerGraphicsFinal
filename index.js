@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as TWEEN from './js/tween.esm.js';
 import * as GUI from 'dat.gui';
 
-let camera, controls, cameraTPP, controlsTPP, scene, renderer;
-let player, helmet, monitor, bottle, video, meshShape; 
-let geometry, material
+let camera, controls, cameraTPP, controlsTPP, cubeCamera, cubeRenderTarget, scene, renderer;
+let player, helmet, monitor, bottle, video, meshShape, sphere; 
+let geometry, material, sphereMat
 let currentCamera;
 let playerPos = new THREE.Vector3(0, 0, 0);
 let inAnimation = false;
@@ -21,34 +22,12 @@ var isTPP = false
 var isPlaying = false;
 var meshRoughness = 0.25
 
-
 main();
 animate();
 
 function main() {
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    cameraTPP = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    camera.position.z = 10;
-    currentCamera = camera;
-
-    scene = new THREE.Scene();
-
-    var env = new THREE.CubeTextureLoader()
-        .setPath( 'envCube/' )
-        .load( [
-            'px.png',
-            'nx.png',
-            'py.png',
-            'ny.png',
-            'pz.png',
-            'nz.png'
-        ] );
-    
-    env.mapping = THREE.CubeRefractionMapping;
-    scene.background = env;
-    scene.environment = env;
-
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio( window.devicePixelRatio );
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.75;
@@ -56,6 +35,27 @@ function main() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
 
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    cameraTPP = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    camera.position.z = 10;
+    currentCamera = camera;
+
+    var env = new THREE.CubeTextureLoader()
+    .setPath( 'envCube/' )
+    .load( [
+        'px.png',
+        'nx.png',
+        'py.png',
+        'ny.png',
+        'pz.png',
+        'nz.png'
+    ])
+
+    env.mapping = THREE.CubeRefractionMapping
+    scene = new THREE.Scene();
+    // scene.rotation.y = 0.5;
+    scene.background = env;
+    scene.environment = env;
 
     // Lights
     const light = new THREE.SpotLight( 0xffffff, 1.5 );
@@ -115,7 +115,6 @@ function main() {
     const cube = new THREE.Mesh( geometry, material );
     cube.castShadow = true;
     // scene.add( cube );
-
 
     // Load Player
     loader.setPath('rickastley/')
@@ -282,11 +281,21 @@ function main() {
     plane.receiveShadow = true;
     scene.add( plane );
 
-    // const helper = new THREE.GridHelper( 100, 100 );
-    // helper.position.y = -29;
-    // helper.material.opacity = 0.1;
-    // // helper.material.transparent = true;
-    // scene.add( helper );
+    cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 128 );
+    cubeRenderTarget.texture.type = THREE.HalfFloatType
+    cubeCamera = new THREE.CubeCamera( 0.1, 1000, cubeRenderTarget );
+    cubeCamera.position.set(0, 0, 30);
+    
+    // scene.add(cubeCamera)
+    cubeRenderTarget.texture.mapping = THREE.CubeRefractionMapping
+    material = new THREE.MeshStandardMaterial( {
+        envMap: cubeRenderTarget.texture,
+        roughness: 0.03,
+        metalness: 1
+    } );
+    sphere = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 15 ), material );
+    sphere.position.set(0, 0, 30);
+    scene.add( sphere );
 
     window.addEventListener( 'resize', onResize, false );
     window.addEventListener( 'keydown', onKeyDown, false );
@@ -378,7 +387,7 @@ function onKeyDown( ev ) {
 }
 
 function animate() {
-    requestAnimationFrame( animate );
+    requestAnimationFrame(animate)
 
     if (player != undefined && !inAnimation) {
         if (isTPP) {
@@ -396,6 +405,11 @@ function animate() {
     meshShape.rotation.x += 0.01;
     meshShape.rotation.y += 0.01;
 
+    sphere.visable = false;
+    // cubeCamera.position.z += 0.01
+    cubeCamera.update( renderer, scene );
+    sphere.visable = true
+    // scene.add(sphere)
     controlsTPP.update()
     controls.update();
     TWEEN.update()
