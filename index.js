@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import Stats from 'three/addons/libs/stats.module.js';
 import * as TWEEN from './js/tween.esm.js';
-import * as GUI from 'dat.gui';
 
 let camera, controls, cameraTPP, controlsTPP, cubeCamera, cubeRenderTarget, scene, renderer;
 let player, helmet, monitor, bottle, video, meshShape, sphere; 
@@ -11,6 +11,7 @@ let geometry, material, sphereMat
 let currentCamera;
 let playerPos = new THREE.Vector3(0, 0, 0);
 let inAnimation = false;
+let stats;
 
 const loader = new GLTFLoader();
 const mouse = new THREE.Vector2();
@@ -34,6 +35,12 @@ function main() {
     renderer.shadowMap.enabled = true;
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
+
+    stats = new Stats();
+    document.body.appendChild( stats.dom );
+    const gui = new GUI();
+    const sceneFolder = gui.addFolder( 'Scene' );
+    sceneFolder.add( renderer, 'toneMappingExposure', 0, 2 ).name( 'exposure' );
 
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     cameraTPP = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -254,13 +261,16 @@ function main() {
     // Weird Shape :>
     geometry = new THREE.IcosahedronGeometry(1, 0);
     material = new THREE.MeshPhysicalMaterial({  
-        roughness: meshRoughness,  
+        roughness: 0.25,  
         transmission: 1, // Add transparency
         thickness: 0.5, // Add Refraction
     });
     const bumpTexture = new THREE.TextureLoader().load('img/concreteNormal.jpg')
     material.bumpMap = bumpTexture
     material.bumpScale = 0.015
+    const shapeFolder = gui.addFolder( 'Shape' )
+    shapeFolder.add( material, 'roughness', 0, 1 );
+    shapeFolder.add( material, 'metalness', 0, 1 );
 
     meshShape = new THREE.Mesh(geometry, material)
     meshShape.castShadow = true;
@@ -281,21 +291,21 @@ function main() {
     plane.receiveShadow = true;
     scene.add( plane );
 
-    cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 128 );
-    cubeRenderTarget.texture.type = THREE.HalfFloatType
-    cubeCamera = new THREE.CubeCamera( 0.1, 1000, cubeRenderTarget );
-    cubeCamera.position.set(0, 0, 30);
+    // cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 128 );
+    // cubeRenderTarget.texture.type = THREE.HalfFloatType
+    // cubeCamera = new THREE.CubeCamera( 0.1, 1000, cubeRenderTarget );
+    // cubeCamera.position.set(0, 0, 30);
     
-    // scene.add(cubeCamera)
-    cubeRenderTarget.texture.mapping = THREE.CubeRefractionMapping
-    material = new THREE.MeshStandardMaterial( {
-        envMap: cubeRenderTarget.texture,
-        roughness: 0.03,
-        metalness: 1
-    } );
-    sphere = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 15 ), material );
-    sphere.position.set(0, 0, 30);
-    scene.add( sphere );
+    // // scene.add(cubeCamera)
+    // cubeRenderTarget.texture.mapping = THREE.CubeRefractionMapping
+    // material = new THREE.MeshStandardMaterial( {
+    //     envMap: cubeRenderTarget.texture,
+    //     roughness: 0.03,
+    //     metalness: 1
+    // } );
+    // sphere = new THREE.Mesh( new THREE.IcosahedronGeometry( 5, 15 ), material );
+    // sphere.position.set(0, 0, 30);
+    // scene.add( sphere );
 
     window.addEventListener( 'resize', onResize, false );
     window.addEventListener( 'keydown', onKeyDown, false );
@@ -405,16 +415,16 @@ function animate() {
     meshShape.rotation.x += 0.01;
     meshShape.rotation.y += 0.01;
 
-    sphere.visable = false;
-    // cubeCamera.position.z += 0.01
-    cubeCamera.update( renderer, scene );
-    sphere.visable = true
+    // sphere.visable = false;
+    // cubeCamera.update( renderer, scene );
+    // sphere.visable = true
     // scene.add(sphere)
     controlsTPP.update()
     controls.update();
     TWEEN.update()
 
     renderer.render( scene, currentCamera );
+    stats.update();
 }
 
 // animate();
